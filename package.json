@@ -1,0 +1,59 @@
+{
+	"name": "@vahor/rehype-d2",
+	"version": "0.0.1",
+	"description": "A Rehype plugin to convert D2 diagrams to SVG or PNG.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/vahor/rehype-d2.git"
+	},
+	"module": "index.ts",
+	"type": "module",
+	"exports": "./dist/index.js",
+	"main": "./dist/index.cjs",
+	"private": false,
+	"files": ["dist"],
+	"author": {
+		"email": "me@vahor.fr"
+	},
+	"keywords": [
+		"rehype",
+		"rehype-plugin",
+		"d2",
+		"diagram",
+		"plugin",
+		"documentation"
+	],
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/bun": "latest",
+		"bun-plugin-dts": "^0.3.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.5.0",
+		"pkg-pr-new": "^0.0.41",
+		"rehype": "^13.0.2"
+	},
+	"dependencies": {
+		"@terrastruct/d2": "^0.1.23",
+		"hast-util-from-html": "^2.0.3",
+		"mini-svg-data-uri": "^1.4.4",
+		"unist": "^0.0.1",
+		"unist-util-visit": "^5.0.0",
+		"unist-util-visit-parents": "^6.0.1"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"scripts": {
+		"prepare": "husky",
+		"build": "bun run build.ts",
+		"format": "bunx @biomejs/biome check ./ --write",
+		"typecheck": "tsc --noEmit --declaration"
+	},
+	"lint-staged": {
+		"*": ["biome check --no-errors-on-unmatched --files-ignore-unknown=true"]
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
