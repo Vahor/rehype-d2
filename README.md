@@ -18,7 +18,7 @@ import { rehype } from 'rehype'
 import rehypeD2 from '@vahor/rehype-d2'
 
 const processor = await rehype()
-  .use(rehypeD2, { strategy: 'inline-png', cwd: "d2", compileOptions: { layout: "elk", sketch: true, pad: 0 } })
+  .use(rehypeD2, { strategy: 'inline-svg', cwd: "d2", compileOptions: { layout: "elk", sketch: true, pad: 0 } })
   .process(...)
 ```
 

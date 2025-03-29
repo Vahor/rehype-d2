@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
 import { rehype } from "rehype";
+import rehypeStringify from "rehype-stringify";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 import { VFile } from "vfile";
 import rehypeD2 from "../src/index.ts";
 
@@ -33,31 +37,83 @@ describe("renders", async () => {
 		cwd: "tests/imports",
 	};
 
+	const runTest = async ({
+		processor,
+		outputFileName,
+		fixtureContent,
+	}: {
+		// biome-ignore lint/suspicious/noExplicitAny: I don't know the correct type
+		processor: any;
+		outputFileName: string;
+		fixtureContent: string;
+	}) => {
+		const result = await processor.process(fixtureContent);
+		expect(result.value).toMatchSnapshot();
+		if (process.env.CI !== "true") {
+			Bun.write(`tests/output/${outputFileName}`, result.value);
+		}
+	};
+
 	for (const fixture of fixtures) {
 		const fixtureContent = await Bun.file(`tests/fixtures/${fixture}`).text();
-		describe(fixture, () => {
-			test("renders to inline-svg", async () => {
-				const processor = rehype().use(rehypeD2, {
-					...options,
-					strategy: "inline-svg",
+		if (fixture.endsWith(".md")) {
+			describe(fixture, () => {
+				test("renders to inline-svg (markdown)", async () => {
+					const processor = unified()
+						.use(remarkParse)
+						.use(remarkRehype)
+						.use(rehypeD2, {
+							...options,
+							strategy: "inline-svg",
+						})
+						.use(rehypeStringify);
+					await runTest({
+						processor,
+						outputFileName: `${fixture}-inline-svg.html`,
+						fixtureContent,
+					});
 				});
-				const result = await processor.process(fixtureContent);
-				expect(result.value).toMatchSnapshot();
-				if (process.env.CI !== "true") {
-					Bun.write(`tests/output/${fixture}-inline-svg.html`, result.value);
-				}
-			});
-			test("renders to inline-png", async () => {
-				const processor = rehype().use(rehypeD2, {
-					...options,
-					strategy: "inline-png",
+				test("renders to inline-png (markdown)", async () => {
+					const processor = unified()
+						.use(remarkParse)
+						.use(remarkRehype)
+						.use(rehypeD2, {
+							...options,
+							strategy: "inline-png",
+						})
+						.use(rehypeStringify);
+					await runTest({
+						processor,
+						outputFileName: `${fixture}-inline-png.html`,
+						fixtureContent,
+					});
 				});
-				const result = await processor.process(fixtureContent);
-				expect(result.value).toMatchSnapshot();
-				if (process.env.CI !== "true") {
-					Bun.write(`tests/output/${fixture}-inline-png.html`, result.value);
-				}
 			});
-		});
+		} else {
+			describe(fixture, () => {
+				test("renders to inline-svg (html)", async () => {
+					const processor = rehype().use(rehypeD2, {
+						...options,
+						strategy: "inline-svg",
+					});
+					await runTest({
+						processor,
+						outputFileName: `${fixture}-inline-svg.html`,
+						fixtureContent,
+					});
+				});
+				test("renders to inline-png (html)", async () => {
+					const processor = rehype().use(rehypeD2, {
+						...options,
+						strategy: "inline-png",
+					});
+					await runTest({
+						processor,
+						outputFileName: `${fixture}-inline-png.html`,
+						fixtureContent,
+					});
+				});
+			});
+		}
 	}
 });
