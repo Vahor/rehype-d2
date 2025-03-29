@@ -2,8 +2,10 @@ import type { BuildConfig } from "bun";
 import dts from "bun-plugin-dts";
 
 const defaultBuildConfig: BuildConfig = {
+	target: "node",
 	entrypoints: ["./src/index.ts"],
 	outdir: "./dist",
+	packages: "external",
 };
 
 await Promise.all([
