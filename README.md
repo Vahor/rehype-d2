@@ -18,7 +18,7 @@ import { rehype } from 'rehype'
 import rehypeD2 from '@vahor/rehype-d2'
 
 const processor = await rehype()
-  .use(rehypeD2, { strategy: 'inline-svg', cwd: "d2", compileOptions: { layout: "elk", sketch: true, pad: 0 } })
+  .use(rehypeD2, { strategy: 'inline-svg', cwd: "d2", defaultMetadata: { layout: "elk", sketch: true, pad: 0 } })
   .process(...)
 ```
 
@@ -31,9 +31,11 @@ const processor = await rehype()
 - `cwd`: The working directory to use for to resolve imports.
    - If not provided, imports won't be available.
 
-- `compileOptions`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
+- `defaultMetadata`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
 
 # Examples
+
+You can pass any props to the code block, this will override the `defaultMetadata` option.
 
 ```html
 <code class="language-d2" title="This is a diagram" alt="This is a description" width="200" height="100">
@@ -48,16 +50,17 @@ a -> b: Message
 
 When using [remark](https://github.com/remarkjs/remark) to process markdown and transform it into HTML, metadata fields can also be used:
 
-```md
-\`\`\`d2 width=200 height=100 title="This is a diagram" alt="This is a description"
+~~~md
+```d2 width=200 height=100 title="This is a diagram" alt="This is a description"
 ...@vars
 
 a: From
 b: To
 a -> b: Message
-\`\`\`
 ```
-See other examples in the fixtures directory `tests/fixtures` and `tests/output` to see the generated HTML.
+~~~
+
+See other examples in the fixtures directory [`tests/fixtures`](https://github.com/Vahor/rehype-d2/tree/main/tests/fixtures) and [`tests/output`](https://github.com/Vahor/rehype-d2/tree/main/tests/output) to see the generated HTML.
 
 # Roadmap
 
