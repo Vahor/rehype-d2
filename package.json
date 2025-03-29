@@ -31,7 +31,12 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.0",
 		"pkg-pr-new": "^0.0.41",
-		"rehype": "^13.0.2"
+		"rehype": "^13.0.2",
+		"rehype-stringify": "^10.0.1",
+		"remark": "^15.0.1",
+		"remark-parse": "^11.0.0",
+		"remark-rehype": "^11.1.1",
+		"unified": "^11.0.5"
 	},
 	"dependencies": {
 		"@terrastruct/d2": "^0.1.23",
