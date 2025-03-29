@@ -29,13 +29,30 @@ function isD2Tag(
 	}
 }
 
+function getRenderAlt(renderOptions: RenderOptions, value: string) {
+	if (typeof renderOptions.alt === "function") {
+		return renderOptions.alt(value);
+	}
+	return renderOptions.alt || "D2 diagram";
+}
+
+function getRenderTitle(renderOptions: RenderOptions, value: string) {
+	if (typeof renderOptions.title === "function") {
+		return renderOptions.title(value);
+	}
+	return renderOptions.title || value.trim();
+}
+
 export interface RehypeD2Options {
 	strategy?: Strategy;
 	target?: {
 		tagName: string;
 		className: string;
 	};
-	renderOptions?: RenderOptions;
+	renderOptions?: RenderOptions & {
+		alt?: string | ((value: string) => string);
+		title?: string | ((value: string) => string);
+	};
 }
 
 export class RehypeD2RendererError extends Error {
@@ -52,7 +69,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			tagName: "code",
 			className: "language-d2",
 		},
-		renderOptions,
+		renderOptions = {},
 	} = options || {};
 
 	if (!isValidStrategy(strategy)) {
@@ -62,8 +79,6 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			)}`,
 		);
 	}
-
-	const d2 = new D2();
 
 	return async (tree) => {
 		const foundNodes: FoundNode[] = [];
@@ -90,8 +105,14 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
+				const d2 = new D2();
 				const render = await d2.compile(value, renderOptions);
 				const svg = await d2.render(render.diagram, render.renderOptions);
+				if (typeof svg !== "string") {
+					throw new RehypeD2RendererError(
+						`Failed to render svg diagram for ${value}`,
+					);
+				}
 
 				let result: ElementContent;
 				if (strategy === "inline-svg") {
@@ -103,9 +124,9 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 						type: "element",
 						tagName: "img",
 						properties: {
-							alt: render.description || "D2 diagram",
+							alt: getRenderAlt(renderOptions, value),
 							src: svgToDataURI(svg),
-							title: render.title || value.trim(),
+							title: getRenderTitle(renderOptions, value),
 						},
 						children: [],
 					};

@@ -20,11 +20,17 @@ describe("renders", async () => {
 				const processor = rehype().use(rehypeD2, { strategy: "inline-svg" });
 				const result = await processor.process(fixtureContent);
 				expect(result.value).toMatchSnapshot();
+				if (process.env.CI !== "true") {
+					Bun.write(`tests/output/${fixture}-inline-svg.html`, result.value);
+				}
 			});
 			test("renders to inline-png", async () => {
 				const processor = rehype().use(rehypeD2, { strategy: "inline-png" });
 				const result = await processor.process(fixtureContent);
 				expect(result.value).toMatchSnapshot();
+				if (process.env.CI !== "true") {
+					Bun.write(`tests/output/${fixture}-inline-png.html`, result.value);
+				}
 			});
 		});
 	}
