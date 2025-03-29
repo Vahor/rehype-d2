@@ -7,13 +7,15 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
-permissions:
-  contents: write
-
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: github.repository == '@vahor/rehype-d2'
+    permissions:
+      contents: write # to create release (changesets/action)
+      id-token: write # OpenID Connect token needed for provenance
+      pull-requests: write # to create pull request (changesets/action)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,3 +37,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_ENV: production
+          NPM_CONFIG_PROVENANCE: true

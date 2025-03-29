@@ -1,10 +1,11 @@
-// @ts-expect-error: types are not available
-import { D2, type RenderOptions } from "@terrastruct/d2";
+import { readFileSync, readdirSync } from "node:fs";
+import { type CompileOptions, D2 } from "@terrastruct/d2";
 import type { Element, ElementContent, Root } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import svgToDataURI from "mini-svg-data-uri";
 import type { Plugin } from "unified";
 import { visitParents } from "unist-util-visit-parents";
+import "./d2.d.ts";
 
 const strategies = ["inline-svg", "inline-png"] as const;
 type Strategy = (typeof strategies)[number];
@@ -29,13 +30,56 @@ function isD2Tag(
 	}
 }
 
+function getRenderAlt(
+	compileOptions: RehypeD2Options["compileOptions"],
+	value: string,
+) {
+	if (typeof compileOptions?.alt === "function") {
+		return compileOptions.alt(value);
+	}
+	return compileOptions?.alt || "D2 diagram";
+}
+
+function getRenderTitle(
+	compileOptions: RehypeD2Options["compileOptions"],
+	value: string,
+) {
+	if (typeof compileOptions?.title === "function") {
+		return compileOptions.title(value);
+	}
+	return compileOptions?.title || value.trim();
+}
+
+function valueContainsImports(value: string) {
+	const pattern = /^\s*...@\w+\s*$/gm;
+	return pattern.test(value);
+}
+
+function buildImportDirectory(cwd: string | undefined) {
+	if (!cwd) return {};
+	const imports = readdirSync(cwd);
+	return imports.reduce(
+		(acc, importName) => {
+			const importPath = `${cwd}/${importName}`;
+			const importContent = readFileSync(importPath, "utf-8");
+			acc[importName] = importContent;
+			return acc;
+		},
+		{} as Record<string, string>,
+	);
+}
+
 export interface RehypeD2Options {
 	strategy?: Strategy;
+	cwd?: string;
 	target?: {
 		tagName: string;
 		className: string;
 	};
-	renderOptions?: RenderOptions;
+	compileOptions?: CompileOptions & {
+		alt?: string | ((value: string) => string);
+		title?: string | ((value: string) => string);
+	};
 }
 
 export class RehypeD2RendererError extends Error {
@@ -52,7 +96,8 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			tagName: "code",
 			className: "language-d2",
 		},
-		renderOptions,
+		compileOptions = {},
+		cwd,
 	} = options || {};
 
 	if (!isValidStrategy(strategy)) {
@@ -63,7 +108,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 		);
 	}
 
-	const d2 = new D2();
+	const fs = buildImportDirectory(cwd);
 
 	return async (tree) => {
 		const foundNodes: FoundNode[] = [];
@@ -79,6 +124,13 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			}
 
 			const nodeContent = node.children[0] as { value: string };
+
+			if (valueContainsImports(nodeContent.value) && !cwd) {
+				throw new RehypeD2RendererError(
+					`To use imports, you must provide a "cwd" option (directory to resolve imports from)`,
+				);
+			}
+
 			// biome-ignore lint/style/noNonNullAssertion: Element is not the root so it has a parent
 			const parent = ancestors.at(-1)!;
 			foundNodes.push({
@@ -90,8 +142,20 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
-				const render = await d2.compile(value, renderOptions);
+				const d2 = new D2();
+				const render = await d2.compile({
+					fs: {
+						...fs,
+						index: value,
+					},
+					options: compileOptions,
+				});
 				const svg = await d2.render(render.diagram, render.renderOptions);
+				if (typeof svg !== "string") {
+					throw new RehypeD2RendererError(
+						`Failed to render svg diagram for ${value}`,
+					);
+				}
 
 				let result: ElementContent;
 				if (strategy === "inline-svg") {
@@ -103,9 +167,9 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 						type: "element",
 						tagName: "img",
 						properties: {
-							alt: render.description || "D2 diagram",
+							alt: getRenderAlt(compileOptions, value),
 							src: svgToDataURI(svg),
-							title: render.title || value.trim(),
+							title: getRenderTitle(compileOptions, value),
 						},
 						children: [],
 					};

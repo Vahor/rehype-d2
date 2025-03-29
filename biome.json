@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": []
+		"ignore": ["./dist/**", "./node_modules/**", "./src/d2.d.ts"]
 	},
 	"formatter": {
 		"enabled": true,

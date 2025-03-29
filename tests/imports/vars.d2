@@ -1,0 +1,35 @@
+direction: right
+
+vars: {
+  d2-config: {
+    theme-id: 0
+    pad: 0
+    center: true
+    layout-engine: elk
+
+    theme-overrides: {
+      B1: "#000000" # arrow color
+      N2: "#000000" # italic color
+    }
+  }
+}
+
+vars: {
+  loading-icon: https://cdn.hugeicons.com/icons/loading-03-stroke-rounded.svg
+
+  colors: {
+    greeen: {
+      light: "#F7FDF9"
+      dark: "#A9D8B7"
+    }
+  }
+}
+
+classes: {
+  green: {
+    style: {
+      stroke: ${colors.greeen.dark}
+      fill: ${colors.greeen.light}
+    }
+  }
+}
