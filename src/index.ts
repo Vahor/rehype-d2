@@ -31,6 +31,7 @@ function isD2Tag(
 }
 
 function valueContainsImports(value: string) {
+	// Imports are defined using the ...@filename syntax
 	const pattern = /^\s*...@\w+\s*$/gm;
 	return pattern.test(value);
 }
@@ -66,6 +67,7 @@ function parseMetadata(
 	}
 	const data = node.data as unknown as { meta: string };
 	if (data?.meta) {
+		// When using markdown, metadata are stored in data.meta using the syntax `key="value"`, e.g. `width="200" title="Diagram title"` (note the quotes)
 		const pattern = /([^=\s]+)=(?:"([^"]*)"|([^\s]*))/g;
 		let match: RegExpMatchArray | null;
 		while (true) {
