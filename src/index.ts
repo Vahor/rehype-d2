@@ -55,7 +55,14 @@ function parseMetadata(
 	value: string,
 	defaultMetadata: RehypeD2Options["defaultMetadata"],
 ) {
-	const metadata: Record<string, unknown> = {};
+	const metadata: Record<string, unknown> = {
+		title: value.trim(),
+		alt: value.trim(),
+		noXMLTag: true,
+		center: true,
+		pad: 0,
+	};
+
 	if (defaultMetadata) {
 		for (const [key, defaultValue] of Object.entries(defaultMetadata)) {
 			if (typeof defaultValue === "function") {
@@ -135,13 +142,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			className: "language-d2",
 		},
 		cwd,
-		defaultMetadata = {
-			title: (value: string) => value.trim(),
-			alt: (value: string) => value.trim(),
-			noXMLTag: true,
-			center: true,
-			pad: 0,
-		},
+		defaultMetadata = {},
 	} = options || {};
 
 	if (!isValidStrategy(strategy)) {
