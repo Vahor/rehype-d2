@@ -1,5 +1,11 @@
 # @vahor/rehype-d2
 
+## 0.0.4
+
+### Patch Changes
+
+- [#6](https://github.com/Vahor/rehype-d2/pull/6) [`8a65390`](https://github.com/Vahor/rehype-d2/commit/8a65390ed07f917da86b249e7f1d2b2d5e946345) Thanks [@Vahor](https://github.com/Vahor)! - fix undefined on title and alt methods when using defaultMetadata
+
 ## 0.0.3
 
 ### Patch Changes
