@@ -18,7 +18,7 @@ import { rehype } from 'rehype'
 import rehypeD2 from '@vahor/rehype-d2'
 
 const processor = await rehype()
-  .use(rehypeD2, { strategy: 'inline-png', cwd: process.cwd(), renderOptions: { sketch: true } })
+  .use(rehypeD2, { strategy: 'inline-png', cwd: "d2", compileOptions: { layout: "elk", sketch: true, pad: 0 } })
   .process(...)
 ```
 
@@ -28,22 +28,34 @@ const processor = await rehype()
   - `'inline-svg'`: Replace the diagram with an inline SVG. This is the default. *Recommended*.
   - `'inline-png'`: Replace the diagram with an inline PNG, the image source will be a data URI of the svg.
 
-- `cwd`: The current working directory to use for resolving relative paths. Used for imports inside D2 diagrams.
-  - Default: `process.cwd()`
+- `cwd`: The working directory to use for to resolve imports.
+   - If not provided, imports won't be available.
 
-- `renderOptions`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L31)
+- `compileOptions`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
 
-## Example in markdown
+# Examples
 
 ```html
 <code class="language-d2">
+...@vars
+
 a: From
 b: To
 a -> b: Message
 </code>
 ```
 
-If you want to use this plugin in markdown, you can first use a rehype plugin to parse the markdown into HTML, then use this plugin to convert the HTML to SVG.
+See other examples in the fixtures directory `tests/fixtures` and `tests/output` to see the generated HTML.
+
+# Roadmap
+
+- Add support for metadata, e.g. title, description, size directly in the code block.
+- Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are not used or already defined in another diagram.
+
+# Integration with other tools
+
+- If you already have a rehype plugin that process code blocks, I suggest placing `rehype-d2` first, so that the code block is unchanged.
+- When using with [contentlayer](https://github.com/timlrx/contentlayer2). You might have to patch the `contentlayer` library to avoid bundling the `d2` library. See [issue](https://github.com/timlrx/contentlayer2/issues/70)
 
 # Acknowledgements
 
