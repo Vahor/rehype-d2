@@ -5,16 +5,14 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/vahor/rehype-d2.git"
+		"url": "git+https://github.com/Vahor/rehype-d2.git"
 	},
 	"module": "index.ts",
 	"type": "module",
 	"exports": "./dist/index.js",
 	"main": "./dist/index.cjs",
 	"private": false,
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"author": {
 		"email": "me@vahor.fr"
 	},
@@ -59,9 +57,7 @@
 		"typecheck": "tsc --noEmit --declaration"
 	},
 	"lint-staged": {
-		"*": [
-			"biome check --no-errors-on-unmatched --files-ignore-unknown=true"
-		]
+		"*": ["biome check --no-errors-on-unmatched --files-ignore-unknown=true"]
 	},
 	"publishConfig": {
 		"access": "public"
