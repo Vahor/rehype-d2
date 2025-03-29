@@ -64,7 +64,6 @@ See other examples in the fixtures directory [`tests/fixtures`](https://github.c
 
 # Roadmap
 
-- Add support for metadata, e.g. title, description, size directly in the code block.
 - Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are not used or already defined in another diagram.
 
 # Integration with other tools
