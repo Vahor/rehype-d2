@@ -45,7 +45,7 @@ export class RehypeD2RendererError extends Error {
 	}
 }
 
-const rehypeMermaid: Plugin<[RehypeD2Options], Root> = (options) => {
+const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 	const {
 		strategy = "inline-svg",
 		target = {
@@ -121,4 +121,4 @@ const rehypeMermaid: Plugin<[RehypeD2Options], Root> = (options) => {
 	};
 };
 
-export default rehypeMermaid;
+export default rehypeD2;
