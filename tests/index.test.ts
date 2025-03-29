@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
 import { rehype } from "rehype";
-import rehypeD2 from "../src/d2.ts";
+import rehypeD2 from "../src/index.ts";
 
 describe("types", () => {
 	test("fails if strategy is invalid", () => {
