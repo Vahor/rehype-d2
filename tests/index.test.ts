@@ -10,6 +10,7 @@ import rehypeD2 from "../src/index.ts";
 
 describe("types", () => {
 	test("fails if strategy is invalid", () => {
+		// @ts-expect-error: we are testing invalid values
 		const processor = rehype().use(rehypeD2, { strategy: "invalid" });
 
 		expect(() => processor.processSync("")).toThrowErrorMatchingSnapshot();

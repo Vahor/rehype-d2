@@ -36,7 +36,7 @@ const processor = await rehype()
 # Examples
 
 ```html
-<code class="language-d2">
+<code class="language-d2" title="This is a diagram" alt="This is a description" width="200" height="100">
 ...@vars
 
 a: From
@@ -45,6 +45,18 @@ a -> b: Message
 </code>
 ```
 
+
+When using [remark](https://github.com/remarkjs/remark) to process markdown and transform it into HTML, metadata fields can also be used:
+
+```md
+\`\`\`d2 width=200 height=100 title="This is a diagram" alt="This is a description"
+...@vars
+
+a: From
+b: To
+a -> b: Message
+\`\`\`
+```
 See other examples in the fixtures directory `tests/fixtures` and `tests/output` to see the generated HTML.
 
 # Roadmap

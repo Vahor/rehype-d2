@@ -30,26 +30,6 @@ function isD2Tag(
 	}
 }
 
-function getRenderAlt(
-	compileOptions: RehypeD2Options["compileOptions"],
-	value: string,
-) {
-	if (typeof compileOptions?.alt === "function") {
-		return compileOptions.alt(value);
-	}
-	return compileOptions?.alt || "D2 diagram";
-}
-
-function getRenderTitle(
-	compileOptions: RehypeD2Options["compileOptions"],
-	value: string,
-) {
-	if (typeof compileOptions?.title === "function") {
-		return compileOptions.title(value);
-	}
-	return compileOptions?.title || value.trim();
-}
-
 function valueContainsImports(value: string) {
 	const pattern = /^\s*...@\w+\s*$/gm;
 	return pattern.test(value);
@@ -69,6 +49,53 @@ function buildImportDirectory(cwd: string | undefined) {
 	);
 }
 
+function parseMetadata(
+	node: Element,
+	value: string,
+	defaultMetadata: RehypeD2Options["defaultMetadata"],
+) {
+	const metadata: Record<string, unknown> = {};
+	if (defaultMetadata) {
+		for (const [key, defaultValue] of Object.entries(defaultMetadata)) {
+			if (typeof defaultValue === "function") {
+				metadata[key] = defaultValue(value);
+			} else {
+				metadata[key] = defaultValue;
+			}
+		}
+	}
+	const data = node.data as unknown as { meta: string };
+	if (data?.meta) {
+		const pattern = /([^=\s]+)=(?:"([^"]*)"|([^\s]*))/g;
+		let match: RegExpMatchArray | null;
+		while (true) {
+			match = pattern.exec(data.meta);
+			if (!match) break;
+			const key = match[1];
+			const value = match[2] !== undefined ? match[2] : match[3];
+			if (!key || !value) continue;
+			const valueAsNumber = Number(value);
+			if (!Number.isNaN(valueAsNumber)) {
+				metadata[key] = valueAsNumber;
+			} else {
+				if (value === "true" || value === "false") {
+					metadata[key] = value === "true";
+				} else {
+					metadata[key] = value;
+				}
+			}
+		}
+	}
+
+	if (node.properties) {
+		for (const [key, value] of Object.entries(node.properties)) {
+			if (Array.isArray(value)) continue;
+			metadata[key] = value;
+		}
+	}
+	return metadata;
+}
+
 export interface RehypeD2Options {
 	strategy?: Strategy;
 	cwd?: string;
@@ -76,10 +103,19 @@ export interface RehypeD2Options {
 		tagName: string;
 		className: string;
 	};
-	compileOptions?: CompileOptions & {
-		alt?: string | ((value: string) => string);
-		title?: string | ((value: string) => string);
+	defaultMetadata?: {
+		[k in keyof NodeMetadata]?:
+			| NodeMetadata[k]
+			| ((value: string) => NodeMetadata[k]);
 	};
+}
+
+export interface NodeMetadata
+	extends Omit<CompileOptions, `font${string}` | "target"> {
+	title?: string;
+	alt?: string;
+	width?: string;
+	height?: string;
 }
 
 export class RehypeD2RendererError extends Error {
@@ -96,8 +132,14 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			tagName: "code",
 			className: "language-d2",
 		},
-		compileOptions = {},
 		cwd,
+		defaultMetadata = {
+			title: (value: string) => value.trim(),
+			alt: (value: string) => value.trim(),
+			noXMLTag: true,
+			center: true,
+			pad: 0,
+		},
 	} = options || {};
 
 	if (!isValidStrategy(strategy)) {
@@ -143,12 +185,13 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
 				const d2 = new D2();
+				const metadata = parseMetadata(node, value, defaultMetadata);
 				const render = await d2.compile({
 					fs: {
 						...fs,
 						index: value,
 					},
-					options: compileOptions,
+					options: metadata,
 				});
 				const svg = await d2.render(render.diagram, render.renderOptions);
 				if (typeof svg !== "string") {
@@ -159,17 +202,29 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 
 				let result: ElementContent;
 				if (strategy === "inline-svg") {
-					result = fromHtml(svg, {
+					const root = fromHtml(svg, {
 						fragment: true,
-					}) as unknown as ElementContent;
+					}) as unknown as Root;
+					// biome-ignore lint/style/noNonNullAssertion: There is a root element
+					const svgElement = root.children![0] as Element;
+					svgElement.properties = {
+						...svgElement.properties,
+						width: metadata.width as number,
+						height: metadata.height as number,
+						title: metadata.title as string,
+						alt: metadata.alt as string,
+					};
+					result = svgElement;
 				} else {
 					const img: Element = {
 						type: "element",
 						tagName: "img",
 						properties: {
-							alt: getRenderAlt(compileOptions, value),
+							alt: metadata.alt as string,
 							src: svgToDataURI(svg),
-							title: getRenderTitle(compileOptions, value),
+							title: metadata.title as string,
+							width: metadata.width as number,
+							height: metadata.height as number,
 						},
 						children: [],
 					};
