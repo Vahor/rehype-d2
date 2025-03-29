@@ -36,6 +36,9 @@ describe("renders", async () => {
 
 	const options = {
 		cwd: "tests/imports",
+		defaultMetadata: {
+			alt: "custom alt",
+		},
 	};
 
 	const runTest = async ({
