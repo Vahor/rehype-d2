@@ -39,7 +39,7 @@ const processor = await rehype()
 - `globalImports`: A list of imports to add to the D2 renderer. Requires `cwd` to be set.
   - Dictionary of themes, each theme is a key.
   - Example: `{ light: ["light.d2"], dark: ["dark.d2"] }`, will prepend the content diagram with `...@light.d2` and `...@dark.d2` respective to the theme.
-  - Sometimes using the import syntax can be limiting, for example if you want a `*` selector to also effect other files. In this case you can use the include syntax: `{ light: [{ filename: "light.d2", mode: "include" }], dark: [{ filename: "dark.d2", mode: "include" }] }`. When using `include` the whole file will be prepended as if it was always a single file.
+  - Sometimes using the import syntax can be limiting, for example if you want a `*` selector to also effect other files. In this case you can use the include syntax: `{ light: [{ filename: "light.d2", mode: "prepend" }], dark: [{ filename: "dark.d2", mode: "prepend" }] }`. When using `prepend` the whole file will be prepended as if it was always a single file. (default value is equivalent to `mode: "impot"`
 
 
 
