@@ -97,6 +97,17 @@ function buildHeaders(
 	return `${r}\n`;
 }
 
+function autoCastValue(value: unknown) {
+	const valueAsNumber = Number(value);
+	if (!Number.isNaN(valueAsNumber)) {
+		return valueAsNumber;
+	}
+	if (value === "true" || value === "false") {
+		return value === "true";
+	}
+	return value;
+}
+
 function parseMetadata(node: Element, value: string) {
 	const metadata: Record<string, unknown> = {
 		title: value.trim(),
@@ -118,23 +129,14 @@ function parseMetadata(node: Element, value: string) {
 			const key = match[1];
 			const value = match[2] !== undefined ? match[2] : match[3];
 			if (!key || !value) continue;
-			const valueAsNumber = Number(value);
-			if (!Number.isNaN(valueAsNumber)) {
-				metadata[key] = valueAsNumber;
-			} else {
-				if (value === "true" || value === "false") {
-					metadata[key] = value === "true";
-				} else {
-					metadata[key] = value;
-				}
-			}
+			metadata[key] = autoCastValue(value);
 		}
 	}
 
 	if (node.properties) {
 		for (const [key, value] of Object.entries(node.properties)) {
 			if (Array.isArray(value)) continue;
-			metadata[key] = value;
+			metadata[key] = autoCastValue(value);
 		}
 	}
 
