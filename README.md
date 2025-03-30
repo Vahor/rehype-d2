@@ -67,7 +67,7 @@ This will generate the following HTML:
 
 When using `inline-svg`:
 ```html
-<svg alt="This is a description" title="This is a diagram" width="200" height="100">
+<svg aria-label="This is a description" width="200" height="100">
   ...
 </svg>
 ```
@@ -81,7 +81,7 @@ See other examples in the fixtures directory [`tests/fixtures`](https://github.c
 
 # Roadmap
 
-- Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are not used or already defined in another diagram.
+- Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are already defined in another diagram or globally in the html page.
 
 # Integration with other tools
 
