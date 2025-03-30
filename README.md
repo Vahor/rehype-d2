@@ -18,7 +18,7 @@ import { rehype } from 'rehype'
 import rehypeD2 from '@vahor/rehype-d2'
 
 const processor = await rehype()
-  .use(rehypeD2, { strategy: 'inline-svg', cwd: "d2", defaultMetadata: { layout: "elk", sketch: true, pad: 0 } })
+  .use(rehypeD2, { strategy: 'inline-svg', cwd: "d2", defaultMetadata: { default: { layout: "elk", sketch: true, pad: 0 } } })
   .process(...)
 ```
 
@@ -31,10 +31,16 @@ const processor = await rehype()
 - `cwd`: The working directory to use for to resolve imports.
    - If not provided, imports won't be available.
 
+- `defaultThemes`: The themes to use if no themes are specified in the metadata. Default is `["default"]`.
+
 - `defaultMetadata`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
+  - Dictionary of themes, each theme is a key.
 
 - `globalImports`: A list of imports to add to the D2 renderer. Requires `cwd` to be set.
-  - Example: `["vars.d2"]`, will _prepend_ `...@vars` to every diagram before rendering.
+  - Dictionary of themes, each theme is a key.
+  - Example: `{ light: ["light.d2"], dark: ["dark.d2"] }`, will _prepend_ `...@light` on light theme and `...@dark` on dark theme to every diagram before rendering.
+
+
 
 # Examples
 
@@ -78,6 +84,45 @@ When using `inline-png`:
 ```
 
 See other examples in the fixtures directory [`tests/fixtures`](https://github.com/Vahor/rehype-d2/tree/main/tests/fixtures) and [`tests/output`](https://github.com/Vahor/rehype-d2/tree/main/tests/output) to see the generated HTML.
+
+## Light and dark themes
+
+The default theme is `default`.
+
+When using multiple themes, this plugin will generate a svg or png for each theme.
+It's up to you to define the css to hide or show the diagrams.
+
+For example, if you have a light and dark theme, you can use the following css to hide the light theme:
+
+```css
+.dark :not([data-d2-theme="dark"]) {
+  display: none;
+}
+.light :not([data-d2-theme="light"]) {
+  display: none;
+}
+```
+
+Example with markdown:
+
+~~~md
+```d2 themes=dark,light
+a: From
+b: To
+a -> b: Message
+```
+~~~
+
+This will generate the following HTML:
+
+```html
+<svg data-d2-theme="dark">
+  ...
+</svg>
+<svg data-d2-theme="light">
+  ...
+</svg>
+```
 
 # Roadmap
 

@@ -23,16 +23,21 @@ function isValidStrategy(strategy: string): strategy is Strategy {
 	return strategies.includes(strategy as Strategy);
 }
 
-function validateImports(imports: string[], fs: Record<string, string>) {
-	if (imports.length === 0) return;
-	const invalidImports = imports.filter(
-		(importName) => fs[importName] === undefined,
-	);
-	if (invalidImports.length > 0) {
-		const fsKeys = Object.keys(fs);
-		throw new RehypeD2RendererError(
-			`Invalid imports: ${invalidImports.join(", ")}, found files: [${fsKeys.join(", ")}]`,
+function validateImports(options: RehypeD2Options, fs: Record<string, string>) {
+	const { globalImports } = options;
+	if (!globalImports) return;
+
+	for (const [theme, imports] of Object.entries(globalImports)) {
+		if (imports.length === 0) return;
+		const invalidImports = imports.filter(
+			(importName) => fs[importName] === undefined,
 		);
+		if (invalidImports.length > 0) {
+			const fsKeys = Object.keys(fs);
+			throw new RehypeD2RendererError(
+				`Invalid imports: ${invalidImports.join(", ")} for theme ${theme}, found files: [${fsKeys.join(", ")}]`,
+			);
+		}
 	}
 }
 
@@ -72,21 +77,17 @@ function buildImportDirectory(cwd: string | undefined) {
 	);
 }
 
-function buildHeaders(options: RehypeD2Options) {
+function buildHeaders(options: RehypeD2Options, theme: string) {
 	let r = "";
-	if (options.globalImports) {
-		r += options.globalImports
+	if (options.globalImports?.[theme]) {
+		r += options.globalImports[theme]
 			.map((importName) => `...@${importName}`)
 			.join("\n");
 	}
 	return r;
 }
 
-function parseMetadata(
-	node: Element,
-	value: string,
-	defaultMetadata: RehypeD2Options["defaultMetadata"],
-) {
+function parseMetadata(node: Element, value: string) {
 	const metadata: Record<string, unknown> = {
 		title: value.trim(),
 		alt: value.trim(),
@@ -96,15 +97,6 @@ function parseMetadata(
 		optimize: true,
 	};
 
-	if (defaultMetadata) {
-		for (const [key, defaultValue] of Object.entries(defaultMetadata)) {
-			if (typeof defaultValue === "function") {
-				metadata[key] = defaultValue(value);
-			} else {
-				metadata[key] = defaultValue;
-			}
-		}
-	}
 	const data = node.data as unknown as { meta: string };
 	if (data?.meta) {
 		// When using markdown, metadata are stored in data.meta using the syntax `key="value"`, e.g. `width="200" title="Diagram title"` (note the quotes)
@@ -135,26 +127,55 @@ function parseMetadata(
 			metadata[key] = value;
 		}
 	}
+
+	// themes is a special case, we expect an array
+	if (!Array.isArray(metadata.themes) && typeof metadata.themes === "string") {
+		metadata.themes = metadata.themes.split(",");
+	}
+
 	return metadata;
 }
 
-export interface RehypeD2Options {
+function addDefaultMetadata(
+	to: Record<string, unknown>,
+	value: string,
+	theme: string,
+	defaultMetadata: RehypeD2Options["defaultMetadata"],
+) {
+	if (!defaultMetadata?.[theme]) return;
+	for (const [key, defaultValue] of Object.entries(defaultMetadata[theme])) {
+		if (to[key]) continue;
+		if (typeof defaultValue === "function") {
+			to[key] = defaultValue(value);
+		} else {
+			to[key] = defaultValue;
+		}
+	}
+}
+
+type Themes = readonly [string, ...string[]];
+
+export type RehypeD2Options<T extends Themes = Themes> = {
 	strategy?: Strategy;
 	cwd?: string;
 	target?: {
 		tagName: string;
 		className: string;
 	};
-	defaultMetadata?: {
-		[k in keyof NodeMetadata]?:
-			| NodeMetadata[k]
-			| ((value: string) => NodeMetadata[k]);
-	};
-	globalImports?: `${string}.d2`[];
-}
+	defaultThemes?: T;
+	defaultMetadata?: Record<
+		T[number],
+		{
+			[k in keyof NodeMetadata]?:
+				| NodeMetadata[k]
+				| ((value: string) => NodeMetadata[k]);
+		}
+	>;
+	globalImports?: Record<T[number], `${string}.d2`[]>;
+};
 
 export interface NodeMetadata
-	extends Omit<CompileOptions, `font${string}` | "target"> {
+	extends Omit<CompileOptions, `font${string}` | "target" | "darkThemeId"> {
 	title?: string;
 	alt?: string;
 	width?: string;
@@ -169,7 +190,9 @@ export class RehypeD2RendererError extends Error {
 	}
 }
 
-const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
+const rehypeD2: Plugin<[RehypeD2Options], Root> = (
+	options: RehypeD2Options,
+) => {
 	const {
 		strategy = "inline-svg",
 		target = {
@@ -177,9 +200,10 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			className: "language-d2",
 		},
 		cwd,
-		defaultMetadata = {},
-		globalImports = [],
-	} = options || {};
+		defaultMetadata,
+		globalImports,
+		defaultThemes = ["default"],
+	} = options;
 
 	if (!isValidStrategy(strategy)) {
 		throw new RehypeD2RendererError(
@@ -188,15 +212,18 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			)}`,
 		);
 	}
-	if (globalImports.length > 0 && !cwd) {
+	if (
+		globalImports &&
+		Object.values(globalImports).some((imports) => imports.length > 0) &&
+		!cwd
+	) {
 		throw new RehypeD2RendererError(
 			`To use globalImports, you must provide a "cwd" option (directory to resolve imports from)`,
 		);
 	}
 
 	const fs = buildImportDirectory(cwd);
-	validateImports(globalImports, fs);
-	const headers = buildHeaders(options);
+	validateImports(options, fs);
 
 	return async (tree) => {
 		const foundNodes: FoundNode[] = [];
@@ -231,61 +258,84 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
 				const d2 = new D2();
-				const metadata = parseMetadata(node, value, defaultMetadata);
-				const codeToProcess = `${headers}\n${value}`;
-				const render = await d2.compile({
-					fs: {
-						...fs,
-						index: codeToProcess,
-					},
-					options: metadata,
-				});
-				const svg = await d2.render(render.diagram, render.renderOptions);
-				if (typeof svg !== "string") {
-					throw new RehypeD2RendererError(
-						`Failed to render svg diagram for ${value}`,
-					);
-				}
-				let optimizedSvg: string = svg;
-				if (metadata.optimize) {
-					optimizedSvg = optimizeSvg(svg, svggoConfig);
+				const baseMetadata = parseMetadata(node, value);
+				if (!baseMetadata.themes) {
+					baseMetadata.themes = defaultThemes;
+					if (defaultThemes.length === 0) {
+						throw new RehypeD2RendererError(
+							"Missing themes in metadata and no defaultThemes found",
+						);
+					}
 				}
 
-				let result: ElementContent;
-				if (strategy === "inline-svg") {
-					const root = fromHtml(optimizedSvg, {
-						fragment: true,
-					}) as unknown as Root;
-					// biome-ignore lint/style/noNonNullAssertion: There is a root element
-					const svgElement = root.children![0] as Element;
-					svgElement.properties = {
-						...svgElement.properties,
-						width: metadata.width as number,
-						height: metadata.height as number,
-						role: "img",
-						"aria-label": metadata.alt as string,
-					};
-					result = svgElement;
-				} else {
-					const img: Element = {
-						type: "element",
-						tagName: "img",
-						properties: {
-							alt: metadata.alt as string,
-							src: svgToDataURI(optimizedSvg),
-							title: metadata.title as string,
-							width: metadata.width as number,
-							height: metadata.height as number,
+				const metadataThemes = new Set(baseMetadata.themes as string[]);
+				const elements: Element[] = [];
+
+				for (const theme of metadataThemes) {
+					const headers = buildHeaders(options, theme);
+					const metadata = JSON.parse(JSON.stringify(baseMetadata));
+					addDefaultMetadata(metadata, value, theme, defaultMetadata);
+
+					const codeToProcess = `${headers}\n${value}`;
+					const render = await d2.compile({
+						fs: {
+							...fs,
+							index: codeToProcess,
 						},
-						children: [],
+						options: metadata,
+					});
+					const svg = await d2.render(render.diagram, render.renderOptions);
+					if (typeof svg !== "string") {
+						throw new RehypeD2RendererError(
+							`Failed to render svg diagram for ${value}`,
+						);
+					}
+					let optimizedSvg: string = svg;
+					if (metadata.optimize) {
+						optimizedSvg = optimizeSvg(svg, svggoConfig);
+					}
+
+					const sharedProperties = {
+						height: metadata.height as number,
+						width: metadata.width as number,
+						"data-d2-theme": theme,
+						title: metadata.title as string,
 					};
-					result = img;
+
+					let result: ElementContent;
+					if (strategy === "inline-svg") {
+						const root = fromHtml(optimizedSvg, {
+							fragment: true,
+						}) as unknown as Root;
+						// biome-ignore lint/style/noNonNullAssertion: There is a root element
+						const svgElement = root.children![0] as Element;
+						svgElement.properties = {
+							...svgElement.properties,
+							...sharedProperties,
+							role: "img",
+							"aria-label": metadata.alt as string,
+						};
+						result = svgElement;
+					} else {
+						const img: Element = {
+							type: "element",
+							tagName: "img",
+							properties: {
+								...sharedProperties,
+								alt: metadata.alt as string,
+								src: svgToDataURI(optimizedSvg),
+							},
+							children: [],
+						};
+						result = img;
+					}
+					elements.push(result);
 				}
 
 				// biome-ignore lint/style/noNonNullAssertion: Element is not the root so it has a parent
 				const children = ancestor.children!;
 				const index = children.indexOf(node);
-				children.splice(index, 1, result);
+				children.splice(index, 1, ...elements);
 			}),
 		);
 	};
