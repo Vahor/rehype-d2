@@ -14,6 +14,14 @@ const dtsConfig: DtsOptions = {
 	},
 };
 
+const addImportHeader = async (file: string) => {
+	const content = await Bun.file(file).text();
+	return `
+import "./d2.d.ts";
+${content}
+`;
+};
+
 await Promise.all([
 	Bun.build({
 		...defaultBuildConfig,
@@ -26,4 +34,6 @@ await Promise.all([
 		format: "cjs",
 		naming: "[dir]/[name].cjs",
 	}),
+	Bun.write("dist/d2.d.ts", Bun.file("./src/d2.d.ts")),
+	Bun.write("dist/index.d.ts", await addImportHeader("./dist/index.d.ts")),
 ]);

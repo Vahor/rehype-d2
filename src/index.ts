@@ -20,6 +20,19 @@ function isValidStrategy(strategy: string): strategy is Strategy {
 	return strategies.includes(strategy as Strategy);
 }
 
+function validateImports(imports: string[], fs: Record<string, string>) {
+	if (imports.length === 0) return;
+	const invalidImports = imports.filter(
+		(importName) => fs[importName] === undefined,
+	);
+	if (invalidImports.length > 0) {
+		const fsKeys = Object.keys(fs);
+		throw new RehypeD2RendererError(
+			`Invalid imports: ${invalidImports.join(", ")}, found files: [${fsKeys.join(", ")}]`,
+		);
+	}
+}
+
 function isD2Tag(
 	node: Element,
 	target: NonNullable<RehypeD2Options["target"]>,
@@ -41,6 +54,7 @@ function buildImportDirectory(cwd: string | undefined) {
 	const imports = readdirSync(cwd);
 	return imports.reduce(
 		(acc, importName) => {
+			if (!importName.endsWith(".d2")) return acc;
 			const importPath = `${cwd}/${importName}`;
 			const importContent = readFileSync(importPath, "utf-8");
 			acc[importName] = importContent;
@@ -48,6 +62,16 @@ function buildImportDirectory(cwd: string | undefined) {
 		},
 		{} as Record<string, string>,
 	);
+}
+
+function buildHeaders(options: RehypeD2Options) {
+	let r = "";
+	if (options.globalImports) {
+		r += options.globalImports
+			.map((importName) => `...@${importName}`)
+			.join("\n");
+	}
+	return r;
 }
 
 function parseMetadata(
@@ -117,6 +141,7 @@ export interface RehypeD2Options {
 			| NodeMetadata[k]
 			| ((value: string) => NodeMetadata[k]);
 	};
+	globalImports?: `${string}.d2`[];
 }
 
 export interface NodeMetadata
@@ -143,6 +168,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 		},
 		cwd,
 		defaultMetadata = {},
+		globalImports = [],
 	} = options || {};
 
 	if (!isValidStrategy(strategy)) {
@@ -152,8 +178,15 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			)}`,
 		);
 	}
+	if (globalImports.length > 0 && !cwd) {
+		throw new RehypeD2RendererError(
+			`To use globalImports, you must provide a "cwd" option (directory to resolve imports from)`,
+		);
+	}
 
 	const fs = buildImportDirectory(cwd);
+	validateImports(globalImports, fs);
+	const headers = buildHeaders(options);
 
 	return async (tree) => {
 		const foundNodes: FoundNode[] = [];
@@ -189,10 +222,11 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 			foundNodes.map(async ({ node, value, ancestor }) => {
 				const d2 = new D2();
 				const metadata = parseMetadata(node, value, defaultMetadata);
+				const codeToProcess = `${headers}\n${value}`;
 				const render = await d2.compile({
 					fs: {
 						...fs,
-						index: value,
+						index: codeToProcess,
 					},
 					options: metadata,
 				});
