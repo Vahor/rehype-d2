@@ -74,16 +74,17 @@ describe("renders", async () => {
 	const options: RehypeD2Options = {
 		cwd: "tests/imports",
 		defaultMetadata: {
-			a: {
-				alt: "custom alt",
-			},
 			dark: {
 				themeID: 200,
 			},
 		},
 		globalImports: {
-			a: ["global.d2"],
-			dark: ["global.d2"],
+			dark: [
+				{
+					filename: "global.d2",
+					mode: "prepend",
+				},
+			],
 		},
 	} as const;
 

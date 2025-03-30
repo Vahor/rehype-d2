@@ -29,9 +29,10 @@ function validateImports(options: RehypeD2Options, fs: Record<string, string>) {
 
 	for (const [theme, imports] of Object.entries(globalImports)) {
 		if (imports.length === 0) return;
-		const invalidImports = imports.filter(
-			(importName) => fs[importName] === undefined,
-		);
+		const invalidImports = imports.filter((importName) => {
+			if (typeof importName === "string") return fs[importName] === undefined;
+			return fs[importName.filename] === undefined;
+		});
 		if (invalidImports.length > 0) {
 			const fsKeys = Object.keys(fs);
 			throw new RehypeD2RendererError(
@@ -58,7 +59,7 @@ function isD2Tag(
 
 function valueContainsImports(value: string) {
 	// Imports are defined using the ...@filename syntax
-	const pattern = /^\s*...@\w+\s*$/gm;
+	const pattern = /^\s*...@\w+(?:\.d2)?\s*$/gm;
 	return pattern.test(value);
 }
 
@@ -77,14 +78,23 @@ function buildImportDirectory(cwd: string | undefined) {
 	);
 }
 
-function buildHeaders(options: RehypeD2Options, theme: string) {
-	let r = "";
-	if (options.globalImports?.[theme]) {
-		r += options.globalImports[theme]
-			.map((importName) => `...@${importName}`)
-			.join("\n");
-	}
-	return r;
+function buildHeaders(
+	options: RehypeD2Options,
+	theme: string,
+	fs: Record<string, string>,
+) {
+	if (!options.globalImports) return "";
+	if (!options.globalImports[theme]) return "";
+	const r = options.globalImports[theme]
+		.map((importName) => {
+			if (typeof importName === "string" || importName.mode === "import") {
+				return `...@${importName}`;
+			}
+			return fs[importName.filename];
+		})
+		.filter(Boolean)
+		.join("\n");
+	return `${r}\n`;
 }
 
 function parseMetadata(node: Element, value: string) {
@@ -171,7 +181,16 @@ export type RehypeD2Options<T extends Themes = Themes> = {
 				| ((value: string) => NodeMetadata[k]);
 		}
 	>;
-	globalImports?: Record<T[number], `${string}.d2`[]>;
+	globalImports?: Record<
+		T[number],
+		Array<
+			| `${string}.d2`
+			| {
+					filename: `${string}.d2`;
+					mode: "prepend" | "import";
+			  }
+		>
+	>;
 };
 
 export interface NodeMetadata
@@ -272,11 +291,11 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 				const elements: Element[] = [];
 
 				for (const theme of metadataThemes) {
-					const headers = buildHeaders(options, theme);
+					const headers = buildHeaders(options, theme, fs);
 					const metadata = JSON.parse(JSON.stringify(baseMetadata));
 					addDefaultMetadata(metadata, value, theme, defaultMetadata);
 
-					const codeToProcess = `${headers}\n${value}`;
+					const codeToProcess = `${headers}${value}`;
 					const render = await d2.compile({
 						fs: {
 							...fs,
@@ -284,6 +303,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 						},
 						options: metadata,
 					});
+
 					const svg = await d2.render(render.diagram, render.renderOptions);
 					if (typeof svg !== "string") {
 						throw new RehypeD2RendererError(
