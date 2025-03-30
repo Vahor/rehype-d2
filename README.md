@@ -67,7 +67,7 @@ This will generate the following HTML:
 
 When using `inline-svg`:
 ```html
-<svg alt="This is a description" title="This is a diagram" width="200" height="100">
+<svg aria-label="This is a description" width="200" height="100">
   ...
 </svg>
 ```

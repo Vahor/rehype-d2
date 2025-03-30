@@ -1,4 +1,4 @@
-```d2 width=200 height=100 title="This is a diagram" alt="This is a description"
+```d2 width=800 height=500 title="This is a diagram" alt="This is a description"
   ...@vars
 
   container {

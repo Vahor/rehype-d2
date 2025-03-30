@@ -3,12 +3,15 @@ import { type CompileOptions, D2 } from "@terrastruct/d2";
 import type { Element, ElementContent, Root } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import svgToDataURI from "mini-svg-data-uri";
+import { type Config as SvgoConfig, optimize } from "svgo";
 import type { Plugin } from "unified";
 import { visitParents } from "unist-util-visit-parents";
 import "./d2.d.ts";
 
 const strategies = ["inline-svg", "inline-png"] as const;
 type Strategy = (typeof strategies)[number];
+
+const svggoConfig: SvgoConfig = {};
 
 interface FoundNode {
 	node: Element;
@@ -31,6 +34,11 @@ function validateImports(imports: string[], fs: Record<string, string>) {
 			`Invalid imports: ${invalidImports.join(", ")}, found files: [${fsKeys.join(", ")}]`,
 		);
 	}
+}
+
+function optimizeSvg(svg: string, config: SvgoConfig) {
+	const { data } = optimize(svg, config);
+	return data;
 }
 
 function isD2Tag(
@@ -85,6 +93,7 @@ function parseMetadata(
 		noXMLTag: true,
 		center: true,
 		pad: 0,
+		optimize: true,
 	};
 
 	if (defaultMetadata) {
@@ -150,6 +159,7 @@ export interface NodeMetadata
 	alt?: string;
 	width?: string;
 	height?: string;
+	optimize?: boolean;
 }
 
 export class RehypeD2RendererError extends Error {
@@ -236,10 +246,14 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 						`Failed to render svg diagram for ${value}`,
 					);
 				}
+				let optimizedSvg: string = svg;
+				if (metadata.optimize) {
+					optimizedSvg = optimizeSvg(svg, svggoConfig);
+				}
 
 				let result: ElementContent;
 				if (strategy === "inline-svg") {
-					const root = fromHtml(svg, {
+					const root = fromHtml(optimizedSvg, {
 						fragment: true,
 					}) as unknown as Root;
 					// biome-ignore lint/style/noNonNullAssertion: There is a root element
@@ -248,8 +262,8 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 						...svgElement.properties,
 						width: metadata.width as number,
 						height: metadata.height as number,
-						title: metadata.title as string,
-						alt: metadata.alt as string,
+						role: "img",
+						"aria-label": metadata.alt as string,
 					};
 					result = svgElement;
 				} else {
@@ -258,7 +272,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (options) => {
 						tagName: "img",
 						properties: {
 							alt: metadata.alt as string,
-							src: svgToDataURI(svg),
+							src: svgToDataURI(optimizedSvg),
 							title: metadata.title as string,
 							width: metadata.width as number,
 							height: metadata.height as number,
