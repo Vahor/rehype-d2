@@ -261,14 +261,15 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 				const baseMetadata = parseMetadata(node, value);
 				if (!baseMetadata.themes) {
 					baseMetadata.themes = defaultThemes;
+					if (defaultThemes.length === 0) {
+						throw new RehypeD2RendererError(
+							"Missing themes in metadata and no defaultThemes found",
+						);
+					}
 				}
 
 				const metadataThemes = new Set(baseMetadata.themes as string[]);
 				const elements: Element[] = [];
-
-				if (!baseMetadata.themes) {
-					throw new RehypeD2RendererError("Missing themes in metadata");
-				}
 
 				for (const theme of metadataThemes) {
 					const headers = buildHeaders(options, theme);
