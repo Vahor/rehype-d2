@@ -29,9 +29,10 @@ function validateImports(options: RehypeD2Options, fs: Record<string, string>) {
 
 	for (const [theme, imports] of Object.entries(globalImports)) {
 		if (imports.length === 0) return;
-		const invalidImports = imports.filter(
-			(importName) => fs[importName] === undefined,
-		);
+		const invalidImports = imports.filter((importName) => {
+			if (typeof importName === "string") return fs[importName] === undefined;
+			return fs[importName.filename] === undefined;
+		});
 		if (invalidImports.length > 0) {
 			const fsKeys = Object.keys(fs);
 			throw new RehypeD2RendererError(
@@ -85,7 +86,12 @@ function buildHeaders(
 	if (!options.globalImports) return "";
 	if (!options.globalImports[theme]) return "";
 	const r = options.globalImports[theme]
-		.map((importName) => fs[importName])
+		.map((importName) => {
+			if (typeof importName === "string" || importName.mode === "import") {
+				return `...@${importName}`;
+			}
+			return fs[importName.filename];
+		})
 		.filter(Boolean)
 		.join("\n");
 	return `${r}\n`;
@@ -175,7 +181,16 @@ export type RehypeD2Options<T extends Themes = Themes> = {
 				| ((value: string) => NodeMetadata[k]);
 		}
 	>;
-	globalImports?: Record<T[number], `${string}.d2`[]>;
+	globalImports?: Record<
+		T[number],
+		Array<
+			| `${string}.d2`
+			| {
+					filename: `${string}.d2`;
+					mode: "prepend" | "import";
+			  }
+		>
+	>;
 };
 
 export interface NodeMetadata
