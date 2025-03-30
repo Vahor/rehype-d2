@@ -1,5 +1,13 @@
 # @vahor/rehype-d2
 
+## 0.0.6
+
+### Patch Changes
+
+- [#11](https://github.com/Vahor/rehype-d2/pull/11) [`e61cfe0`](https://github.com/Vahor/rehype-d2/commit/e61cfe03b0748c77e32fd86dcfe211919d04a1eb) Thanks [@Vahor](https://github.com/Vahor)! - add svgo optimization
+
+- [#13](https://github.com/Vahor/rehype-d2/pull/13) [`8b62f0c`](https://github.com/Vahor/rehype-d2/commit/8b62f0c6ba51207e2e463274fa1f91672bab3934) Thanks [@Vahor](https://github.com/Vahor)! - support multiple themes
+
 ## 0.0.5
 
 ### Patch Changes
