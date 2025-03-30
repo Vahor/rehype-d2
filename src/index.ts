@@ -58,7 +58,7 @@ function isD2Tag(
 
 function valueContainsImports(value: string) {
 	// Imports are defined using the ...@filename syntax
-	const pattern = /^\s*...@\w+\s*$/gm;
+	const pattern = /^\s*...@\w+(?:\.d2)?\s*$/gm;
 	return pattern.test(value);
 }
 
@@ -77,11 +77,16 @@ function buildImportDirectory(cwd: string | undefined) {
 	);
 }
 
-function buildHeaders(options: RehypeD2Options, theme: string) {
+function buildHeaders(
+	options: RehypeD2Options,
+	theme: string,
+	fs: Record<string, string>,
+) {
 	if (!options.globalImports) return "";
 	if (!options.globalImports[theme]) return "";
 	const r = options.globalImports[theme]
-		.map((importName) => `...@${importName}`)
+		.map((importName) => fs[importName])
+		.filter(Boolean)
 		.join("\n");
 	return `${r}\n`;
 }
@@ -256,6 +261,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
+				const d2 = new D2();
 				const baseMetadata = parseMetadata(node, value);
 				if (!baseMetadata.themes) {
 					baseMetadata.themes = defaultThemes;
@@ -270,8 +276,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 				const elements: Element[] = [];
 
 				for (const theme of metadataThemes) {
-					const d2 = new D2();
-					const headers = buildHeaders(options, theme);
+					const headers = buildHeaders(options, theme, fs);
 					const metadata = JSON.parse(JSON.stringify(baseMetadata));
 					addDefaultMetadata(metadata, value, theme, defaultMetadata);
 
@@ -283,6 +288,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 						},
 						options: metadata,
 					});
+
 					const svg = await d2.render(render.diagram, render.renderOptions);
 					if (typeof svg !== "string") {
 						throw new RehypeD2RendererError(

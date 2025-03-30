@@ -38,7 +38,8 @@ const processor = await rehype()
 
 - `globalImports`: A list of imports to add to the D2 renderer. Requires `cwd` to be set.
   - Dictionary of themes, each theme is a key.
-  - Example: `{ light: ["light.d2"], dark: ["dark.d2"] }`, will _prepend_ `...@light` on light theme and `...@dark` on dark theme to every diagram before rendering.
+  - Example: `{ light: ["light.d2"], dark: ["dark.d2"] }`, will <ins>prepend</ins> the content of `light.d2` in light theme and `dark.d2` in dark theme.
+     - We are using <ins>prepend</ins> to avoid limitations with imports such as styling with `*` selector.
 
 
 
