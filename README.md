@@ -33,6 +33,9 @@ const processor = await rehype()
 
 - `defaultMetadata`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
 
+- `globalImports`: A list of imports to add to the D2 renderer. Requires `cwd` to be set.
+  - Example: `["vars.d2"]`, will _prepend_ `...@vars` to every diagram before rendering.
+
 # Examples
 
 You can pass any props to the code block, this will override the `defaultMetadata` option.
@@ -59,6 +62,20 @@ b: To
 a -> b: Message
 ```
 ~~~
+
+This will generate the following HTML:
+
+When using `inline-svg`:
+```html
+<svg alt="This is a description" title="This is a diagram" width="200" height="100">
+  ...
+</svg>
+```
+
+When using `inline-png`:
+```html
+<img src="data:image/svg+xml,..." alt="This is a description" title="This is a diagram" width="200" height="100">
+```
 
 See other examples in the fixtures directory [`tests/fixtures`](https://github.com/Vahor/rehype-d2/tree/main/tests/fixtures) and [`tests/output`](https://github.com/Vahor/rehype-d2/tree/main/tests/output) to see the generated HTML.
 

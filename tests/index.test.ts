@@ -29,6 +29,39 @@ describe("types", () => {
 			async () => await processor.process(vFile),
 		).toThrowErrorMatchingSnapshot();
 	});
+
+	test("fails if using globalImports without cwd", () => {
+		const processor = rehype().use(rehypeD2, {
+			strategy: "inline-svg",
+			globalImports: ["vars.d2"],
+		});
+
+		const vFile = new VFile({
+			path: "test.html",
+			value: '<code class="language-d2">\n...@vars\n</code>',
+		});
+
+		expect(
+			async () => await processor.process(vFile),
+		).toThrowErrorMatchingSnapshot();
+	});
+
+	test("fails if using globalImports with a file that doesn't exist", () => {
+		const processor = rehype().use(rehypeD2, {
+			strategy: "inline-svg",
+			cwd: "tests/imports",
+			globalImports: ["vars.d2", "invalid.d2"],
+		});
+
+		const vFile = new VFile({
+			path: "test.html",
+			value: '<code class="language-d2">\n...@vars\n</code>',
+		});
+
+		expect(
+			async () => await processor.process(vFile),
+		).toThrowErrorMatchingSnapshot();
+	});
 });
 
 describe("renders", async () => {
@@ -39,6 +72,7 @@ describe("renders", async () => {
 		defaultMetadata: {
 			alt: "custom alt",
 		},
+		globalImports: ["global.d2"],
 	};
 
 	const runTest = async ({
