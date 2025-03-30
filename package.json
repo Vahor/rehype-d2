@@ -20,9 +20,7 @@
 	},
 	"main": "./dist/index.cjs",
 	"private": false,
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"author": {
 		"email": "me@vahor.fr"
 	},
@@ -65,9 +63,7 @@
 		"typecheck": "tsc --noEmit --declaration"
 	},
 	"lint-staged": {
-		"*": [
-			"biome check --no-errors-on-unmatched --files-ignore-unknown=true"
-		]
+		"*": ["biome check --no-errors-on-unmatched --files-ignore-unknown=true"]
 	},
 	"publishConfig": {
 		"access": "public"
