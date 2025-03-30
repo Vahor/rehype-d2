@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#17](https://github.com/Vahor/rehype-d2/pull/17) [`121eded`](https://github.com/Vahor/rehype-d2/commit/121ededd0d42950bcc455edaca1fb73a46df49ca) Thanks [@Vahor](https://github.com/Vahor)! - add salt to metadate to prevent duplicate id issues
+- [#17](https://github.com/Vahor/rehype-d2/pull/17) [`121eded`](https://github.com/Vahor/rehype-d2/commit/121ededd0d42950bcc455edaca1fb73a46df49ca) Thanks [@Vahor](https://github.com/Vahor)! - add salt to metadata to prevent duplicate id issues
 
 - [#16](https://github.com/Vahor/rehype-d2/pull/16) [`b126567`](https://github.com/Vahor/rehype-d2/commit/b126567ea128932756f9befba0eac91f4f3654e2) Thanks [@Vahor](https://github.com/Vahor)! - fix auto cast html props as boolean if it looks like a boolean
 
