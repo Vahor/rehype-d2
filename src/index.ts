@@ -302,6 +302,9 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 					const metadata = JSON.parse(JSON.stringify(baseMetadata));
 					addDefaultMetadata(metadata, value, theme, defaultMetadata);
 
+					// Add theme to metadata salt so the diagram ID is unique
+					metadata.salt = theme;
+
 					const codeToProcess = `${headers}${value}`;
 					const render = await d2.compile({
 						fs: {
