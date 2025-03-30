@@ -87,8 +87,13 @@ function buildHeaders(
 	if (!options.globalImports[theme]) return "";
 	const r = options.globalImports[theme]
 		.map((importName) => {
-			if (typeof importName === "string" || importName.mode === "import") {
-				return `...@${importName}`;
+			if (typeof importName === "string") {
+				const withoutSuffix = importName.replace(/\.d2$/, "");
+				return `...@${withoutSuffix}`;
+			}
+			if (importName.mode === "import") {
+				const withoutSuffix = importName.filename.replace(/\.d2$/, "");
+				return `...@${withoutSuffix}`;
 			}
 			return fs[importName.filename];
 		})
