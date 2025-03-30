@@ -81,7 +81,7 @@ See other examples in the fixtures directory [`tests/fixtures`](https://github.c
 
 # Roadmap
 
-- Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are not used or already defined in another diagram.
+- Reduce the size of the generated SVGs. Currently each diagram contains the fonts, and colors even if they are already defined in another diagram or globally in the html page.
 
 # Integration with other tools
 
