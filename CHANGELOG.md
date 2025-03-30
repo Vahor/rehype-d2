@@ -1,5 +1,11 @@
 # @vahor/rehype-d2
 
+## 0.0.7
+
+### Patch Changes
+
+- [#14](https://github.com/Vahor/rehype-d2/pull/14) [`0e70035`](https://github.com/Vahor/rehype-d2/commit/0e700354bea8faf752f3be483eb4b9ac41aa6276) Thanks [@Vahor](https://github.com/Vahor)! - add `prepend` mode for globalImports
+
 ## 0.0.6
 
 ### Patch Changes
