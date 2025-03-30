@@ -1,5 +1,13 @@
 # @vahor/rehype-d2
 
+## 0.0.5
+
+### Patch Changes
+
+- [#10](https://github.com/Vahor/rehype-d2/pull/10) [`e21efdf`](https://github.com/Vahor/rehype-d2/commit/e21efdfe42be946abb3c0e77775e6ec88c8b4a4e) Thanks [@Vahor](https://github.com/Vahor)! - remove unused `unist` dependency
+
+- [#8](https://github.com/Vahor/rehype-d2/pull/8) [`bc0283a`](https://github.com/Vahor/rehype-d2/commit/bc0283aaaf9f1d6c8ac0994f176e1a7ccaa9f091) Thanks [@Vahor](https://github.com/Vahor)! - add globalImports
+
 ## 0.0.4
 
 ### Patch Changes
