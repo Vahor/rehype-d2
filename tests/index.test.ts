@@ -6,7 +6,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { VFile } from "vfile";
-import rehypeD2 from "../src/index.ts";
+import rehypeD2, { type RehypeD2Options } from "../src/index.ts";
 
 describe("types", () => {
 	test("fails if strategy is invalid", () => {
@@ -33,7 +33,9 @@ describe("types", () => {
 	test("fails if using globalImports without cwd", () => {
 		const processor = rehype().use(rehypeD2, {
 			strategy: "inline-svg",
-			globalImports: ["vars.d2"],
+			globalImports: {
+				b: ["vars.d2"],
+			},
 		});
 
 		const vFile = new VFile({
@@ -50,7 +52,9 @@ describe("types", () => {
 		const processor = rehype().use(rehypeD2, {
 			strategy: "inline-svg",
 			cwd: "tests/imports",
-			globalImports: ["vars.d2", "invalid.d2"],
+			globalImports: {
+				a: ["vars.d2", "invalid.d2"],
+			},
 		});
 
 		const vFile = new VFile({
@@ -67,13 +71,21 @@ describe("types", () => {
 describe("renders", async () => {
 	const fixtures = readdirSync("tests/fixtures");
 
-	const options = {
+	const options: RehypeD2Options = {
 		cwd: "tests/imports",
 		defaultMetadata: {
-			alt: "custom alt",
+			a: {
+				alt: "custom alt",
+			},
+			dark: {
+				themeID: 200,
+			},
 		},
-		globalImports: ["global.d2"],
-	};
+		globalImports: {
+			a: ["global.d2"],
+			dark: ["global.d2"],
+		},
+	} as const;
 
 	const runTest = async ({
 		processor,
