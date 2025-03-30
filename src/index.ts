@@ -256,7 +256,6 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 
 		await Promise.all(
 			foundNodes.map(async ({ node, value, ancestor }) => {
-				const d2 = new D2();
 				const baseMetadata = parseMetadata(node, value);
 				if (!baseMetadata.themes) {
 					baseMetadata.themes = defaultThemes;
@@ -271,6 +270,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 				const elements: Element[] = [];
 
 				for (const theme of metadataThemes) {
+					const d2 = new D2();
 					const headers = buildHeaders(options, theme);
 					const metadata = JSON.parse(JSON.stringify(baseMetadata));
 					addDefaultMetadata(metadata, value, theme, defaultMetadata);
