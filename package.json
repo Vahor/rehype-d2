@@ -9,7 +9,15 @@
 	},
 	"module": "index.ts",
 	"type": "module",
-	"exports": "./dist/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./d2": {
+			"types": "./dist/d2.d.ts"
+		}
+	},
 	"main": "./dist/index.cjs",
 	"private": false,
 	"files": ["dist"],
