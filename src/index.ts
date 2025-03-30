@@ -78,13 +78,12 @@ function buildImportDirectory(cwd: string | undefined) {
 }
 
 function buildHeaders(options: RehypeD2Options, theme: string) {
-	let r = "";
-	if (options.globalImports?.[theme]) {
-		r += options.globalImports[theme]
-			.map((importName) => `...@${importName}`)
-			.join("\n");
-	}
-	return r;
+	if (!options.globalImports) return "";
+	if (!options.globalImports[theme]) return "";
+	const r = options.globalImports[theme]
+		.map((importName) => `...@${importName}`)
+		.join("\n");
+	return `${r}\n`;
 }
 
 function parseMetadata(node: Element, value: string) {
@@ -276,7 +275,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 					const metadata = JSON.parse(JSON.stringify(baseMetadata));
 					addDefaultMetadata(metadata, value, theme, defaultMetadata);
 
-					const codeToProcess = `${headers}\n${value}`;
+					const codeToProcess = `${headers}${value}`;
 					const render = await d2.compile({
 						fs: {
 							...fs,
