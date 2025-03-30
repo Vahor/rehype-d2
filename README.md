@@ -95,11 +95,11 @@ It's up to you to define the css to hide or show the diagrams.
 For example, if you have a light and dark theme, you can use the following css to hide the light theme:
 
 ```css
-.dark :not([data-d2-theme="dark"]) {
-  display: none;
+.dark [data-d2-theme]:not([data-d2-theme="dark"]) {
+	display: none;
 }
-.light :not([data-d2-theme="light"]) {
-  display: none;
+.light [data-d2-theme]:not([data-d2-theme="light"]) {
+	display: none;
 }
 ```
 
