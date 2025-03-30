@@ -31,8 +31,10 @@ const processor = await rehype()
 - `cwd`: The working directory to use for to resolve imports.
    - If not provided, imports won't be available.
 
+- `defaultThemes`: The themes to use if no themes are specified in the metadata. Default is `["default"]`.
+
 - `defaultMetadata`: The options to pass to the D2 renderer. See [D2 Render Options](https://github.com/terrastruct/d2/blob/0b2203c107df5319380c1d72753ae8c7814324d9/d2js/js/index.d.ts#L8-L44)
-  - Dictionary of themes, each theme is a key. Default theme is `default`.
+  - Dictionary of themes, each theme is a key.
 
 - `globalImports`: A list of imports to add to the D2 renderer. Requires `cwd` to be set.
   - Dictionary of themes, each theme is a key.

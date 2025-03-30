@@ -95,7 +95,6 @@ function parseMetadata(node: Element, value: string) {
 		center: true,
 		pad: 0,
 		optimize: true,
-		themes: ["default"],
 	};
 
 	const data = node.data as unknown as { meta: string };
@@ -163,6 +162,7 @@ export type RehypeD2Options<T extends Themes = Themes> = {
 		tagName: string;
 		className: string;
 	};
+	defaultThemes?: T;
 	defaultMetadata?: Record<
 		T[number],
 		{
@@ -202,6 +202,7 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 		cwd,
 		defaultMetadata,
 		globalImports,
+		defaultThemes = ["default"],
 	} = options;
 
 	if (!isValidStrategy(strategy)) {
@@ -258,6 +259,9 @@ const rehypeD2: Plugin<[RehypeD2Options], Root> = (
 			foundNodes.map(async ({ node, value, ancestor }) => {
 				const d2 = new D2();
 				const baseMetadata = parseMetadata(node, value);
+				if (!baseMetadata.themes) {
+					baseMetadata.themes = defaultThemes;
+				}
 
 				const metadataThemes = new Set(baseMetadata.themes as string[]);
 				const elements: Element[] = [];
