@@ -39,7 +39,7 @@
 		"bun-plugin-dts": "^0.3.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.0",
-		"pkg-pr-new": "^0.0.41",
+		"pkg-pr-new": "^0.0.42",
 		"rehype": "^13.0.2",
 		"rehype-stringify": "^10.0.1",
 		"remark": "^15.0.1",
