@@ -134,6 +134,10 @@ This will generate the following HTML:
 - If you already have a rehype plugin that process code blocks, I suggest placing `rehype-d2` first, so that the code block is unchanged.
 - When using with [contentlayer](https://github.com/timlrx/contentlayer2). You might have to patch the `contentlayer` library to avoid bundling the `d2` library. See [issue](https://github.com/timlrx/contentlayer2/issues/70)
 
+# Who is using rehype-d2?
+
+- [vahor.fr](https://vahor.fr/project/rehype-d2) [(source)](https://github.com/Vahor/vahor.fr/blob/ef2d0054c334bfe7e03f2779b348bf73b0a39d3e/contentlayer.config.ts#L186-L211) <sub>well that's me</sub>
+
 # Acknowledgements
 
 - [Rehype Mermaid](https://github.com/remcohaszing/rehype-mermaid) For the inspiration.
