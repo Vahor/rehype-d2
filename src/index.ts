@@ -34,7 +34,7 @@ function validateImports(options: RehypeD2Options, fs: Record<string, string>) {
 			return fs[importName.filename] === undefined;
 		});
 		if (invalidImports.length > 0) {
-			const fsKeys = Object.keys(fs);
+			const fsKeys = Object.keys(fs).toSorted();
 			throw new RehypeD2RendererError(
 				`Invalid imports: ${invalidImports.join(", ")} for theme ${theme}, found files: [${fsKeys.join(", ")}]`,
 			);
