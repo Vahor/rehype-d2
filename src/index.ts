@@ -1,9 +1,9 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { type CompileOptions, D2 } from "@terrastruct/d2";
 import type { Element, ElementContent, Root } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import svgToDataURI from "mini-svg-data-uri";
-import { type Config as SvgoConfig, optimize } from "svgo";
+import { optimize, type Config as SvgoConfig } from "svgo";
 import type { Plugin } from "unified";
 import { visitParents } from "unist-util-visit-parents";
 import "./d2.d.ts";
