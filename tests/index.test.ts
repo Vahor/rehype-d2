@@ -93,7 +93,6 @@ describe("renders", async () => {
 		outputFileName,
 		fixtureContent,
 	}: {
-		// biome-ignore lint/suspicious/noExplicitAny: I don't know the correct type
 		processor: any;
 		outputFileName: string;
 		fixtureContent: string;
