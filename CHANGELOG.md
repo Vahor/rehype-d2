@@ -1,5 +1,11 @@
 # @vahor/rehype-d2
 
+## 0.0.9
+
+### Patch Changes
+
+- [#48](https://github.com/Vahor/rehype-d2/pull/48) [`a24ce36`](https://github.com/Vahor/rehype-d2/commit/a24ce3644214fa06f23239710291b7be021d3bb8) Thanks [@Vahor](https://github.com/Vahor)! - update `svgo` dependency
+
 ## 0.0.8
 
 ### Patch Changes
